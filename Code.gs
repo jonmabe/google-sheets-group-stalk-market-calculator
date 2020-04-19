@@ -634,6 +634,39 @@ function onEdit(edit)
   const sheet = edit.range.getSheet();
   const sheetName = sheet.getName();
   
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  if(sheetName == "manifest")
+  {
+    var template = ss.getSheetByName('template');
+    var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+    var namesRange = sheet.getRange(3, 1, 100);
+    var namesValues = namesRange.getValues();
+    var sheetNames = [];
+    
+    for(let i = 0; i < sheets.length; i++){
+      let n = sheets[i].getName();
+      sheetNames.push(n);
+      if(n != "manifest" && BLACKLISTED_SHEET_NAMES.indexOf(n) == -1){
+        updateSheet(sheets[i]);
+      }
+    } 
+    
+    for (var row in namesValues) {
+      for (var col in namesValues[row]) {
+        if(!namesValues[row][col]) continue;
+        if(sheetNames.indexOf(namesValues[row][col]) != -1) continue;
+        
+        Logger.log(namesValues[row][col]);
+        var newSheet = template.copyTo(ss);
+        newSheet.setName(namesValues[row][col]);
+        newSheet.getRange('F1').setValue(namesValues[row][col]);
+      }
+    }
+    
+    return;
+  }
+  
   for(let i = 0; i < BLACKLISTED_SHEET_NAMES.length; i++)
   {
     if(sheetName == BLACKLISTED_SHEET_NAMES[i])
@@ -672,4 +705,8 @@ function writeError(errorDescription, sheet)
   
   sheet.getRange(START_ROW_OF_RESULTS_TABLE, 1).setValue("Error");
   sheet.getRange(START_ROW_OF_RESULTS_TABLE, 2).setValue(errorDescription);
+}
+
+function sheetName() {
+  return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
 }
